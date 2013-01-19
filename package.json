@@ -1,0 +1,15 @@
+{
+	"name": "forocoches",
+	"version": "0.1.1",
+	"main": "forocoches.js",
+	"dependencies": {
+		"jsdom": "0.3.x",
+		"iconv": "1.2.x"
+	},
+	"author": "Gipsy <ste3ls@gmail.com>",
+	"description": "a simple forocoches HTTP scraper",
+	"repository": {
+	    "type": "git",
+	    "url": "https://github.com/nodejitsu/http-server.git"
+	}
+}
