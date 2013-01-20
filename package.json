@@ -7,9 +7,14 @@
 		"iconv": "1.2.x"
 	},
 	"author": "Gipsy <ste3ls@gmail.com>",
-	"description": "a simple forocoches HTTP scraper",
+	"description": "simple rastreador HTTP para forocoches",
 	"repository": {
 	    "type": "git",
 	    "url": "https://github.com/Benja-gipsy-king/node-forocoches"
+	},
+	"keywords": ["forocoches"],
+	"license": "GPLv3",
+	"engines": {
+	    "node": ">=0.8"
 	}
 }

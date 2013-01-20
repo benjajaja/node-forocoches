@@ -8,11 +8,12 @@ exports.forum = {
 	GENERAL: 2
 };
 
-exports.foro = function(id, callback) {
+var request = function(path, callback) {
+	console.log('GET ' + path);
 	var request = http.request({
 		hostname: 'm.forocoches.com',
 		port: 80,
-		path: '/foro/forumdisplay.php?f=' + id,
+		path: path,
 		method: 'GET',
 		headers: {
 			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -32,7 +33,6 @@ exports.foro = function(id, callback) {
 			length += chunk.length;
 		});
 		
-		
 		clientResponse.on('end', function () {
 			if (clientResponse.statusCode != 200) {
 				return callback(clientResponse.statusCode);
@@ -46,30 +46,65 @@ exports.foro = function(id, callback) {
 				pos += chunk.length;
 			});
 			
-			
-			
 			jsdom.env({
 				html: iconv.convert(buffer).toString(),
 				src: [jquery],
-				done: function(errors, window) {
-					if (errors) {
-						callback(errors);
-					} else if (!window) {
-						callback('could not create window object');
-					} else {
-						var links = Array.prototype.slice.call(window.$('.page > div > ul > li > a[id]')).filter(function(a) {
-							return a.id.indexOf('thread_title_') !== -1;
-						}).map(function(a) {
-							return {
-								title: a.textContent,
-								link: 'http://forocoches.com/foro/' + a.getAttribute("href")
-							};
-						});
-						callback(null, links);
-					}
-				}
+				done: callback
 			});
 		});
 	});
 	request.end();
+};
+
+exports.foro = function(id, callback) {
+	request('/foro/forumdisplay.php?f=' + id, function(errors, window) {
+		if (errors) {
+			callback(errors);
+		} else if (!window) {
+			callback('could not create window object');
+		} else {
+			var links = Array.prototype.slice.call(window.$('.page > div > ul > li > a[id]')).filter(function(a) {
+				return a.id.indexOf('thread_title_') !== -1;
+			}).map(function(a) {
+				return {
+					title: a.textContent,
+					link: a.getAttribute("href")
+				};
+			});
+			callback(null, links);
+		}
+	});
+};
+
+exports.post = function(id, callback) {
+	request('/foro/showthread.php?t=' + id, function(errors, window) {
+		if (errors) {
+			callback(errors);
+		} else if (!window) {
+			callback('could not create window object');
+		} else {
+			var posts = Array.prototype.slice.call(window.$('.page > div > ul')).filter(function(post) {
+				if (post.children.length === 1) {
+					return false;
+				} else if (post.className === 'ulpagenav') {
+					return false;
+				}
+				
+				return true;
+			}).map(function(post) {
+				var html = window.$('<div/>').html(window.$(post).find('div[name=HOTWordsTxt]').first().html());
+				html.find(':not(img)').remove();
+				
+				return {
+					user: {
+						online: window.$(post).find('a.postuseravatarlink').children().first().attr('src'),
+						id: parseInt(window.$(post).find('.xsaid a.ui-link').first().attr('href').substring('member.php?u='.length)),
+						name: window.$(post).find('.xsaid a.ui-link').first().text().trim()
+					},
+					text: html.html()
+				};
+			});
+			callback(null, posts);
+		}
+	});
 };
